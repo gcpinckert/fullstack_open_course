@@ -1,38 +1,29 @@
 import { useState } from 'react';
 
-// simplify props.counter by leveraging destructuring assignment
-// use the compact form of arrow functions
-const Display = ({ counter }) => <div>{counter}</div>
+const Display = props => <div>{props.value}</div>
 
-// simplify props.onClick and props.text with destructuring assignment
-// use the compact form of arrow functions
-const Button = ({ onClick, text }) => (
-  <button onClick={onClick}>
-    {text}
-  </button>
-)
+const Button = (props) => {
+  return (
+    <button onClick={props.handleClick}>
+      {props.text}
+    </button>
+  )
+}
+
 
 const App = () => {
-  const [ counter, setCounter ] = useState(0);
-  const increaseByOne = () => setCounter(counter + 1);
-  const setToZero = () => setCounter(0);
-  const decreaseByOne = () => setCounter(counter - 1);
+  const [value, setValue] = useState(10)
 
+  const setToValue = (newValue) => {
+    setValue(newValue);
+  }
+  
   return (
     <div>
-      <Display counter={counter} />
-      <Button
-        onClick={increaseByOne}
-        text='plus'
-      />
-      <Button
-        onClick={setToZero}
-        text='zero'
-      />
-      <Button
-        onClick={decreaseByOne}
-        text='minus'
-      />
+      <Display value={value} />
+      <Button handleClick={() => setToValue(1000)} text="thousand" />
+      <Button handleClick={() => setToValue(0)} text="reset" />
+      <Button handleClick={() => setToValue(value + 1)} text="increment" />
     </div>
   )
 }
