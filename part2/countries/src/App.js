@@ -10,7 +10,8 @@ const Weather = ({ data }) => {
       <div>
         <h3>Weather in {data.name}</h3>
         <div>temperature: {data.main.temp} F</div>
-        <img alt={data.weather.description} src={`http://openweathermap.org/img/wn/${data.weather.icon}@2x.png`} />
+        <img alt={data.weather[0].description} src={`http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`} />
+        <div>{data.weather[0].description}</div>
       </div>
     )
   }
