@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { Input, PersonForm } from './components/PersonForm'
 import Persons from './components/Persons'
 import peopleService from './services/persons';
+import Notification from './components/Notification';
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     peopleService
@@ -42,7 +45,10 @@ const App = () => {
             setPersons(persons.map(person => person.id !== foundPerson.id ? person : updatedPerson));
           })
           .catch(error => {
-            alert(`Could not find ${newName}`);
+            setErrorMessage(`The number for ${newName} could not be updated`);
+            setTimeout(() => {
+              setErrorMessage(null);
+            }, 5000);
           })
       }
     } else {
@@ -51,6 +57,10 @@ const App = () => {
       peopleService
         .create(newPerson)
         .then(addedPerson => {
+          setSuccessMessage(`${addedPerson.name} was added`);
+          setTimeout(() => {
+            setSuccessMessage(null);
+          }, 5000);
           setPersons(persons.concat(addedPerson));
           setNewName('');
           setNewNumber('');
@@ -68,7 +78,13 @@ const App = () => {
         .then(() => {
           setPersons(persons.filter(person => person.id !== parseInt(id)));
         })
-        .catch(error => alert(`${name} was already deleted`));
+        .catch(error => {
+          setErrorMessage(`Information of ${name} has already been deleted`);
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
+          setPersons(persons.filter(person => person.id !== parseInt(id)));
+        });
     }
   }
 
@@ -87,6 +103,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification type='success' message={successMessage} />
+      <Notification type='error' message={errorMessage} />
       <Input label="search by name" value={searchTerm} changeHandler={handleSearchChange} />
       <h3>Add New Person</h3>
       <PersonForm submitHandler={addPerson} 
