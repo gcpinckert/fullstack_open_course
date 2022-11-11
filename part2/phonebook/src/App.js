@@ -1,36 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const Input = ({ label, value, changeHandler }) => {
-  return (
-    <div>
-      {label}: <input value={value} onChange={changeHandler} />
-    </div>
-  )
-}
-
-const PersonForm = ({submitHandler, inputs}) => {
-  return (
-    <form onSubmit={submitHandler}>
-      {inputs.map(input => {
-        return <Input key={input.label} label={input.label} value={input.value} changeHandler={input.changeHandler} />
-      })}
-      <div>
-        <button type="submit">add</button>
-      </div>
-    </form>
-  )
-}
-
-const Persons = ({ people }) => {
-  return (
-    <ul>
-      {people.map(person => 
-        <li key={person.name}>{person.name} {person.number}</li>  
-      )}
-    </ul>
-  )
-}
+import { Input, PersonForm } from './components/PersonForm'
+import Persons from './components/Persons'
+import peopleService from './services/persons';
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -39,10 +10,10 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data);
+    peopleService
+      .getAll()
+      .then(initialPeople => {
+        setPersons(initialPeople);
       });
   }, []);
 
@@ -53,24 +24,52 @@ const App = () => {
 
   const personsToShow = getPeopleMatchingSearch();
 
-  const nameExists = () => {
-    let person = persons.find(person => person.name === newName);
-    return typeof person === 'object';
+  const findPerson = () => {
+    return persons.find(person => person.name === newName);
   }
 
   const addPerson = (event) => {
     event.preventDefault();
+    let foundPerson = findPerson();
 
-    if (nameExists()) {
-      alert(`${newName} is already in the phonebook`);
-      return;
+    if (typeof foundPerson === 'object') {
+      if (window.confirm(`${newName} is already added to the phonebook. Replace the old number with a new one?`)) {
+        let updatedPerson = { ...foundPerson, number: newNumber };
+
+        peopleService
+          .update(foundPerson.id, updatedPerson)
+          .then(updatedPerson => {
+            setPersons(persons.map(person => person.id !== foundPerson.id ? person : updatedPerson));
+          })
+          .catch(error => {
+            alert(`Could not find ${newName}`);
+          })
+      }
+    } else {
+      const newPerson = { name: newName, number: newNumber };
+
+      peopleService
+        .create(newPerson)
+        .then(addedPerson => {
+          setPersons(persons.concat(addedPerson));
+          setNewName('');
+          setNewNumber('');
+        });
     }
+  }
 
-    const name = { name: newName, number: newNumber };
+  const deletePerson = (event) => {
+    let id = event.target.getAttribute('data-id');
+    let name = event.target.getAttribute('data-name');
 
-    setPersons(persons.concat(name));
-    setNewName('');
-    setNewNumber('');
+    if (window.confirm(`Delete ${name}?`)) {
+      peopleService
+        .remove(id)
+        .then(() => {
+          setPersons(persons.filter(person => person.id !== parseInt(id)));
+        })
+        .catch(error => alert(`${name} was already deleted`));
+    }
   }
 
   const handleNumberChange = (event) => {
@@ -96,7 +95,7 @@ const App = () => {
           { label: 'number', value: newNumber, changeHandler: handleNumberChange },
         ]}/>
       <h2>Numbers</h2>
-      <Persons people={personsToShow} />
+      <Persons people={personsToShow} deleteHandler={deletePerson}/>
     </div>
   )
 }
