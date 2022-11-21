@@ -45,7 +45,7 @@ const App = () => {
             setPersons(persons.map(person => person.id !== foundPerson.id ? person : updatedPerson));
           })
           .catch(error => {
-            setErrorMessage(`The number for ${newName} could not be updated`);
+            setErrorMessage(error.response.data.error);
             setTimeout(() => {
               setErrorMessage(null);
             }, 5000);
@@ -64,7 +64,13 @@ const App = () => {
           setPersons(persons.concat(addedPerson));
           setNewName('');
           setNewNumber('');
-        });
+        })
+        .catch(error => {
+          setErrorMessage(error.response.data.error);
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 5000);
+        })
     }
   }
 
