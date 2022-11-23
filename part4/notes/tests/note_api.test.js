@@ -3,7 +3,6 @@ const supertest = require('supertest');
 const helper = require('./test_helper');
 const app = require('../app');
 const api = supertest(app);
-const bcrypt = require('bcrypt');
 const Note = require('../models/note');
 const User = require('../models/user');
 
@@ -68,6 +67,20 @@ describe('viewing a specific note', () => {
 });
 
 describe('addition of a new note', () => {
+  let token;
+
+  beforeEach(async () => {
+    await helper.initializeUsersDb();
+
+    const user = { username: 'root', password: 'sekret'}
+
+    const response = await api
+      .post('/api/login')
+      .send(user)
+    
+    token = response.body.token;
+  })
+
   test('succeeds with valid data', async () => {
     const newNote = {
       content: 'async/await simplifies making async calls',
@@ -77,6 +90,7 @@ describe('addition of a new note', () => {
     await api
       .post('/api/notes')
       .send(newNote)
+      .set('Authorization', `bearer ${token}`)
       .expect(201)
       .expect('Content-Type', /application\/json/);
 
@@ -93,10 +107,26 @@ describe('addition of a new note', () => {
     await api
       .post('/api/notes')
       .send(newNote)
+      .set('Authorization', `bearer ${token}`)
       .expect(400)
     
     const notesAtEnd = await helper.notesInDb();
 
+    expect(notesAtEnd).toHaveLength(helper.initialNotes.length);
+  });
+
+  test('fails with status 401 if invalid token', async () => {
+    const newNote = {
+      content: 'This should fail',
+      important: true,
+    };
+
+    await api
+      .post('/api/notes')
+      .send(newNote)
+      .expect(401);
+
+    const notesAtEnd = await helper.notesInDb();
     expect(notesAtEnd).toHaveLength(helper.initialNotes.length);
   });
 });
@@ -120,12 +150,7 @@ describe('deletion of a note', () => {
 
 describe('when there is initially one user in db', () => {
   beforeEach(async () => {
-    await User.deleteMany({});
-
-    const passwordHash = await bcrypt.hash('sekret', 10);
-    const user = new User({ username: 'root', passwordHash });
-
-    await user.save();
+    await helper.initializeUsersDb();
   });
 
   test('creation succeeds with fresh username', async () => {
