@@ -9,7 +9,8 @@
     "build:ui": "rm -rf build && cd ../tutorial_frontend/ && npm run build && cp -r build ../tutorial_backend",
     "deploy": "fly deploy",
     "logs:prod": "fly logs",
-    "test": "cross-env NODE_ENV=test jest --verbose --runInBand --forceExit"
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand --forceExit",
+    "start:test": "cross-env NODE_ENV=test node index.js"
   },
   "author": "Ginni Pinckert",
   "license": "MIT",
