@@ -2,17 +2,27 @@ import { useDispatch, useSelector } from 'react-redux'
 import { toggleImportanceOf } from '../reducers/noteReducer'
 
 const Note = ({ note, handleClick }) => {
+  const highlight = { background: note.important ? 'yellow' : ''}
+
   return (
-    <li onClick={handleClick}>
+    <li onClick={handleClick} style={highlight}>
       {note.content}
-      <strong>{note.important ? 'important' : ''}</strong>
+      <strong>{note.important ? ' important' : ''}</strong>
     </li>
   )
 }
 
 const Notes = () => {
   const dispatch = useDispatch()
-  const notes = useSelector(state => state)
+  const notes = useSelector(({ filter, notes }) => {
+    if (filter === 'ALL') {
+      return notes
+    }
+
+    return filter === 'IMPORTANT'
+      ? notes.filter(note => note.important)
+      : notes.filter(note => !note.important)
+  })
 
   return (
     <ul>
