@@ -1,14 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { useDispatch } from 'react-redux';
 
 const notificationSlice = createSlice({
   name: 'notification',
   initialState: null,
   reducers: {
-    setVoteNotification(state, action) {
-      return `You voted for: "${action.payload}"`
-    },
-    setNewNotification(state, action) {
-      return `You created the anecdote: "${action.payload}"`
+    addNotification(state, action) {
+      return action.payload
     },
     resetNotification(state, action) {
       return null;
@@ -17,5 +15,15 @@ const notificationSlice = createSlice({
 })
 
 
-export const { setVoteNotification, setNewNotification, resetNotification } = notificationSlice.actions
+export const { addNotification, resetNotification } = notificationSlice.actions
+
+export const setNotification = (content, secs) => {
+  return dispatch => {
+    dispatch(addNotification(content))
+    setTimeout(() => {
+      dispatch(resetNotification())
+    }, secs * 1000)
+  }
+}
+
 export default notificationSlice.reducer
